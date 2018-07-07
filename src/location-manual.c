@@ -45,8 +45,8 @@ location_manual_init(location_manual_state_t **state)
 	if (*state == NULL) return -1;
 
 	location_manual_state_t *s = *state;
-	s->loc.lat = NAN;
-	s->loc.lon = NAN;
+	s->loc.lat = 0;
+	s->loc.lon = 0;
 
 	return 0;
 }
@@ -89,6 +89,11 @@ static int
 location_manual_set_option(location_manual_state_t *state, const char *key,
 			   const char *value)
 {
+state->loc.lat=0;
+state->loc.lon=0;
+return 0;
+
+
 	/* Parse float value */
 	char *end;
 	errno = 0;

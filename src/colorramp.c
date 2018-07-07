@@ -276,9 +276,13 @@ static const float blackbody_color[] = {
 static void
 interpolate_color(float a, const float *c1, const float *c2, float *c)
 {
-	c[0] = (1.0-a)*c1[0] + a*c2[0];
-	c[1] = (1.0-a)*c1[1] + a*c2[1];
-	c[2] = (1.0-a)*c1[2] + a*c2[2];
+	//c[0] = (1.0-a)*c1[0] + a*c2[0];
+	//c[1] = (1.0-a)*c1[1] + a*c2[1];
+	//c[2] = (1.0-a)*c1[2] + a*c2[2];
+ const float scale = 1;
+ c[0] = scale * 1.0;
+ c[1] = scale * 0.95;
+ c[2] = scale * 0.0;
 }
 
 /* Helper macro used in the fill functions */
