@@ -46,6 +46,8 @@ typedef struct {
 	const location_provider_t *provider;
 	/* Arguments for location provider. */
 	char *provider_args;
+
+	int manual_set_loop_period;
 } options_t;
 
 

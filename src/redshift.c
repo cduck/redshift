@@ -270,6 +270,7 @@ interpolate_color_settings(
 	for (int i = 0; i < 3; i++) {
 		result->gamma[i] = (1.0-alpha)*first->gamma[i] +
 			alpha*second->gamma[i];
+		result->color[i] = second->color[i];
 	}
 }
 
@@ -309,6 +310,9 @@ color_setting_reset(color_setting_t *color)
 	color->gamma[0] = 1.0;
 	color->gamma[1] = 1.0;
 	color->gamma[2] = 1.0;
+	color->color[0] = NAN;
+	color->color[1] = NAN;
+	color->color[2] = NAN;
 	color->brightness = 1.0;
 }
 
@@ -1266,12 +1270,26 @@ main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 
-		/* In Quartz (OSX) the gamma adjustments will automatically
-		   revert when the process exits. Therefore, we have to loop
-		   until CTRL-C is received. */
-		if (strcmp(options.method->name, "quartz") == 0) {
+		if (options.manual_set_loop_period > 0) {
 			fputs(_("Press ctrl-c to stop...\n"), stderr);
-			pause();
+			while (1) {
+				sleep(options.manual_set_loop_period);
+				r = options.method->set_temperature(
+					method_state, &manual, options.preserve_gamma);
+				if (r < 0) {
+					fputs(_("Temperature adjustment failed.\n"), stderr);
+					options.method->free(method_state);
+					exit(EXIT_FAILURE);
+				}
+			}
+		} else {
+			/* In Quartz (OSX) the gamma adjustments will automatically
+			   revert when the process exits. Therefore, we have to loop
+			   until CTRL-C is received. */
+			if (strcmp(options.method->name, "quartz") == 0) {
+				fputs(_("Press ctrl-c to stop...\n"), stderr);
+				pause();
+			}
 		}
 	}
 	break;

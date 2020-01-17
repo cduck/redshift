@@ -70,6 +70,34 @@ parse_brightness_string(
 	}
 }
 
+/* A RGB string contains either one hex value,
+   or three decimal values separated by colon. */
+static int
+parse_rgb_string(const char *str, float color[])
+{
+	char *s = strchr(str, ':');
+	if (s == NULL) {
+		/* Use value for all channels */
+		unsigned int c = strtoul(str, NULL, 16);
+		color[0] = ((c >> 16) & 0xff) / 255.0f;
+		color[1] = ((c >> 8) & 0xff) / 255.0f;
+		color[2] = (c & 0xff) / 255.0f;
+	} else {
+		/* Parse separate value for each channel */
+		*(s++) = '\0';
+		char *g_s = s;
+		s = strchr(s, ':');
+		if (s == NULL) return -1;
+
+		*(s++) = '\0';
+		color[0] = atof(str); /* Red */
+		color[1] = atof(g_s); /* Blue */
+		color[2] = atof(s); /* Green */
+	}
+
+	return 0;
+}
+
 /* A gamma string contains either one floating point value,
    or three values separated by colon. */
 static int
@@ -178,6 +206,7 @@ print_help(const char *program_name)
 	   no-wrap */
 	fputs(_("  -b DAY:NIGHT\tScreen brightness to apply (between 0.1 and 1.0)\n"
 		"  -c FILE\tLoad settings from specified configuration file\n"
+		"  -C R:G:B\tAdditional RGB color filter to apply\n"
 		"  -g R:G:B\tAdditional gamma correction to apply\n"
 		"  -l LAT:LON\tYour current location\n"
 		"  -l PROVIDER\tSelect provider for automatic"
@@ -304,10 +333,16 @@ options_init(options_t *options)
 
 	options->scheme.day.temperature = -1;
 	options->scheme.day.gamma[0] = NAN;
+	options->scheme.day.color[0] = NAN;
+	options->scheme.day.color[1] = NAN;
+	options->scheme.day.color[2] = NAN;
 	options->scheme.day.brightness = NAN;
 
 	options->scheme.night.temperature = -1;
 	options->scheme.night.gamma[0] = NAN;
+	options->scheme.night.color[0] = NAN;
+	options->scheme.night.color[1] = NAN;
+	options->scheme.night.color[2] = NAN;
 	options->scheme.night.brightness = NAN;
 
 	/* Temperature for manual mode */
@@ -323,6 +358,8 @@ options_init(options_t *options)
 	options->preserve_gamma = 1;
 	options->mode = PROGRAM_MODE_CONTINUAL;
 	options->verbose = 0;
+
+	options->manual_set_loop_period = -1;
 }
 
 /* Parse a single option from the command-line. */
@@ -349,6 +386,21 @@ parse_command_line_option(
 		r = parse_gamma_string(value, options->scheme.day.gamma);
 		if (r < 0) {
 			fputs(_("Malformed gamma argument.\n"), stderr);
+			fputs(_("Try `-h' for more information.\n"), stderr);
+			return -1;
+		}
+
+		/* Set night gamma to the same value as day gamma.
+		   To set these to distinct values use the config
+		   file. */
+		memcpy(options->scheme.night.gamma,
+		       options->scheme.day.gamma,
+		       sizeof(options->scheme.night.gamma));
+		break;
+	case 'C':
+		r = parse_rgb_string(value, options->scheme.day.color);
+		if (r < 0) {
+			fputs(_("Malformed RGB argument.\n"), stderr);
 			fputs(_("Try `-h' for more information.\n"), stderr);
 			return -1;
 		}
@@ -456,6 +508,9 @@ parse_command_line_option(
 	case 'r':
 		options->use_fade = 0;
 		break;
+	case 'R':
+		options->manual_set_loop_period = 1;
+		break;
 	case 't':
 		s = strchr(value, ':');
 		if (s == NULL) {
@@ -495,7 +550,7 @@ options_parse_args(
 {
 	const char* program_name = argv[0];
 	int opt;
-	while ((opt = getopt(argc, argv, "b:c:g:hl:m:oO:pPrt:vVx")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:C:g:hl:m:oO:pPrRt:vVx")) != -1) {
 		char option = opt;
 		int r = parse_command_line_option(
 			option, optarg, options, program_name, gamma_methods,

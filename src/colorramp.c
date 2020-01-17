@@ -295,6 +295,12 @@ colorramp_fill(uint16_t *gamma_r, uint16_t *gamma_g, uint16_t *gamma_b,
 	int temp_index = ((setting->temperature - 1000) / 100)*3;
 	interpolate_color(alpha, &blackbody_color[temp_index],
 			  &blackbody_color[temp_index+3], white_point);
+	if (setting->color[0] == setting->color[0])
+		white_point[0] *= setting->color[0];
+	if (setting->color[1] == setting->color[1])
+		white_point[1] *= setting->color[1];
+	if (setting->color[2] == setting->color[2])
+		white_point[2] *= setting->color[2];
 
 	for (int i = 0; i < size; i++) {
 		gamma_r[i] = F((double)gamma_r[i]/(UINT16_MAX+1), 0) *
@@ -316,6 +322,12 @@ colorramp_fill_float(float *gamma_r, float *gamma_g, float *gamma_b,
 	int temp_index = ((setting->temperature - 1000) / 100)*3;
 	interpolate_color(alpha, &blackbody_color[temp_index],
 			  &blackbody_color[temp_index+3], white_point);
+	if (setting->color[0] == setting->color[0])
+		white_point[0] *= setting->color[0];
+	if (setting->color[1] == setting->color[1])
+		white_point[1] *= setting->color[1];
+	if (setting->color[2] == setting->color[2])
+		white_point[2] *= setting->color[2];
 
 	for (int i = 0; i < size; i++) {
 		gamma_r[i] = F((double)gamma_r[i], 0);

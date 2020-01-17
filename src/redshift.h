@@ -45,6 +45,7 @@ typedef enum {
 typedef struct {
 	int temperature;
 	float gamma[3];
+	float color[3];
 	float brightness;
 } color_setting_t;
 
